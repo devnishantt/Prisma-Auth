@@ -63,9 +63,9 @@ export default class BaseRepository<T = any> {
     }
   }
 
-  async create(userData: any, options: any = {}): Promise<T> {
+  async create(data: any, options: any = {}): Promise<T> {
     try {
-      return await this.model.create({ userData, ...options });
+      return await this.model.create({ data, ...options });
     } catch (error) {
       handlePrismaError(error, this.modelName, "creation");
     }
@@ -94,6 +94,7 @@ export default class BaseRepository<T = any> {
 
   async findOne(where: any, options: any = {}): Promise<T | null> {
     try {
+      console.log("wherrrrrrrrrrrrrrrrrrrrrrr", where)
       return await this.model.findFirst({ where, ...options });
     } catch (error) {
       handlePrismaError(error, this.modelName, "fetching one");

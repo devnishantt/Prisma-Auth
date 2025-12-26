@@ -20,7 +20,7 @@ interface SafeUser {
 
 export default class UserRepository extends BaseRepository<User> {
   constructor() {
-    super("user");
+    super("User");
   }
 
   async findByEmail(email: string, options: any = {}): Promise<User | null> {
