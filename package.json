@@ -9,9 +9,9 @@
     "dev": "tsx src/index.ts",
     "dev:watch": "nodemon --exec tsx src/index.ts"
   },
-  "author": "",
+  "author": "devnishantt",
   "license": "ISC",
-  "description": "",
+  "description": "authentication service with prisma in typescript",
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",

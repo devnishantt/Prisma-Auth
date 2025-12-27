@@ -5,7 +5,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../utils/common/tokenUtil";
-import { ConflictError } from "../utils/errors/error";
+import { ConflictError, UnauthorizedError } from "../utils/errors/error";
 
 interface UserRegistrationData {
   email: string;
@@ -19,6 +19,10 @@ interface AuthResponse {
   user: Partial<User>;
   accessToken: string;
   refreshToken: string;
+}
+interface LoginCredentials {
+  email: string;
+  password: string;
 }
 
 export default class AuthService {
@@ -58,5 +62,36 @@ export default class AuthService {
     const { password: _, refreshToken: __, ...userDetails } = user;
 
     return { user: userDetails, accessToken, refreshToken };
+  }
+
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    const { email, password } = credentials;
+    const user = await this.userRepository.findByEmailAndValidatePassword(
+      email,
+      password
+    );
+
+    if (!user.isActive) {
+      throw new UnauthorizedError("Account is deactivated.");
+    }
+
+    const accessToken = generateAccessToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    const refreshToken = generateRefreshToken({ id: user.id });
+
+    await this.userRepository.saveRefreshToken(user.id, refreshToken);
+    await this.userRepository.updateLastLogin(user.id);
+
+    return { user, accessToken, refreshToken };
+  }
+
+  async logout(userId: string): Promise<{ success: boolean }> {
+    await this.userRepository.saveRefreshToken(userId, null);
+
+    return { success: true };
   }
 }

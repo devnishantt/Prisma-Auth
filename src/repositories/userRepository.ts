@@ -14,7 +14,7 @@ interface SafeUser {
   phone: string | null;
   firstName: string;
   lastName: string | null;
-  isActive: Boolean;
+  isActive: boolean;
   lastLogin: Date;
 }
 
