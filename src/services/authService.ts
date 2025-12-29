@@ -4,6 +4,7 @@ import UserRepository from "../repositories/userRepository";
 import {
   generateAccessToken,
   generateRefreshToken,
+  verifyRefreshToken,
 } from "../utils/common/tokenUtil";
 import { ConflictError, UnauthorizedError } from "../utils/errors/error";
 
@@ -23,6 +24,10 @@ interface AuthResponse {
 interface LoginCredentials {
   email: string;
   password: string;
+}
+interface TokenResponse {
+  accessToken: string;
+  refreshToken: string;
 }
 
 export default class AuthService {
@@ -93,5 +98,47 @@ export default class AuthService {
     await this.userRepository.saveRefreshToken(userId, null);
 
     return { success: true };
+  }
+
+  async refreshAccessToken(token: string | undefined): Promise<TokenResponse> {
+    if (!token) {
+      throw new UnauthorizedError("No refresh token provided.");
+    }
+
+    const decoded = verifyRefreshToken(token);
+
+    const user = await this.userRepository.findById(decoded.id);
+    if (user.refreshToken !== token) {
+      throw new UnauthorizedError("Invalid or revoked refresh token.");
+    }
+
+    const newAccessToken = generateAccessToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    const newRefreshToken = generateRefreshToken({ id: user.id });
+
+    await this.userRepository.saveRefreshToken(user.id, newRefreshToken);
+
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+  }
+
+  async getCurrentUser(userId: string): Promise<Partial<User>> {
+    return await this.userRepository.findById(userId, {
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        lastLogin: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 }

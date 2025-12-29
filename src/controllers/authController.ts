@@ -34,3 +34,24 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 
   sendSuccess(res, null, "Logout successful.", 200);
 });
+
+export const refreshToken = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { accessToken, refreshToken } = await authService.refreshAccessToken(
+      req.cookies.refreshToken
+    );
+
+    res.cookie("accessToken", accessToken, COOKIE_CONFIG);
+    res.cookie("refreshToken", refreshToken, REFRESH_COOKIE_CONFIG);
+
+    sendSuccess(res, { accessToken }, "Token refreshed successfully.", 200);
+  }
+);
+
+export const getCurrentUser = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = await authService.getCurrentUser(req.user.id);
+
+    sendSuccess(res, { user }, "User retrieved successfully.", 200);
+  }
+);
