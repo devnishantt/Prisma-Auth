@@ -29,6 +29,11 @@ interface TokenResponse {
   accessToken: string;
   refreshToken: string;
 }
+interface UpdateProfileData {
+  firstName?: string;
+  lastName?: string | null;
+  phone?: string | null;
+}
 
 export default class AuthService {
   private userRepository: UserRepository;
@@ -140,5 +145,36 @@ export default class AuthService {
         updatedAt: true,
       },
     });
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ success: boolean }> {
+    await this.userRepository.validatePasswordById(userId, currentPassword);
+
+    await this.userRepository.update(userId, { password: newPassword });
+    await this.userRepository.saveRefreshToken(userId, null);
+
+    return { success: true };
+  }
+
+  async updateProfile(
+    userId: string,
+    data: UpdateProfileData
+  ): Promise<Partial<User>> {
+    const user = await this.userRepository.update(userId, data);
+    if (!user) {
+      throw new UnauthorizedError("User not found");
+    }
+    const { password: _, refreshToken: __, ...safeUser } = user;
+
+    return safeUser;
+  }
+
+  async deleteAccount(userId: string, password: string): Promise<void> {
+    await this.userRepository.validatePasswordById(userId, password);
+    await this.userRepository.delete(userId);
   }
 }

@@ -55,3 +55,38 @@ export const getCurrentUser = asyncHandler(
     sendSuccess(res, { user }, "User retrieved successfully.", 200);
   }
 );
+
+export const changePassword = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { currentPassword, newPassword } = req.body;
+    await authService.changePassword(req.user.id, currentPassword, newPassword);
+
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    sendSuccess(
+      res,
+      null,
+      "Password changed successfully. Please login again.",
+      200
+    );
+  }
+);
+
+export const updateProfile = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = await authService.updateProfile(req.user.id, req.body);
+    sendSuccess(res, user, "Profile updated successfully.", 200);
+  }
+);
+
+export const deleteAccount = asyncHandler(
+  async (req: Request, res: Response) => {
+    await authService.deleteAccount(req.user.id, req.body.password);
+
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    sendSuccess(res, null, "Account deleted successfully.", 200);
+  }
+);
